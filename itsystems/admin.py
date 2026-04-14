@@ -12,6 +12,7 @@ class ITSystemRecordAdmin(admin.ModelAdmin):
         "system_owner",
         "technology_custodian",
         "information_custodian",
+        "link"
     )
 
     readonly_fields = (
@@ -20,6 +21,10 @@ class ITSystemRecordAdmin(admin.ModelAdmin):
         "modified_date",
         "modified_by",
     )
+
+    search_fields = ("system_id_name", "description")
+
+    list_filter = ("division", "status")
 
     def save_model(self, request, obj, form, change):
         if not obj.pk:

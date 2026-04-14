@@ -88,8 +88,8 @@ class ITSystemRecord(models.Model):
     seasonality = models.PositiveSmallIntegerField(choices=SEASONALITY_CHOICES, default=5, verbose_name="Seasonality")
     availability = models.PositiveSmallIntegerField(choices=AVAILABILITY_CHOICES, default=2, verbose_name="Availability")
     description = models.TextField(blank=True)
-    link = models.CharField(max_length=2048, null=True, blank=True, help_text="URL to web application")
-    file_store_link = models.CharField(max_length=2048, null=True, blank=True, verbose_name="File Store Link", help_text="URL to file store")
+    link = models.URLField(max_length=2048, null=True, blank=True, help_text="URL to web application")
+    file_store_link = models.URLField(max_length=2048, null=True, blank=True, verbose_name="File Store Link", help_text="URL to file store")
     system_owner = models.ForeignKey(
         DepartmentUser,
         on_delete=models.SET_NULL,
