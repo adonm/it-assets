@@ -12,7 +12,6 @@ class ITSystemRecord(models.Model):
         verbose_name = "IT System"
         verbose_name_plural = "IT Systems"
 
-    ACTIVE_FILTER = {"status__in": [0, 2]}  # Defines a queryset filter for "active" IT systems.
     STATUS_CHOICES = (
         (1, "Production"), 
         (2, "Production (Legacy)"), 
