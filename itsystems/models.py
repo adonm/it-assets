@@ -1,18 +1,24 @@
 from django.db import models
 
+from organisation.models import DepartmentUser
+
 class ITSystemRecord(models.Model):
     """Represents a named system providing a package of functionality to
     Department staff (normally vendor or bespoke software), which is supported
     by OIM and/or an external vendor.
     """
 
+    class Meta:
+        verbose_name = "IT System"
+        verbose_name_plural = "IT Systems"
+
     ACTIVE_FILTER = {"status__in": [0, 2]}  # Defines a queryset filter for "active" IT systems.
     STATUS_CHOICES = (
-        (0, "Production"), 
-        (1, "Production (Legacy)"), 
-        (2, "Decommissioned"), 
-        (3, "Draft"), 
-        (4, "Unknown")
+        (1, "Production"), 
+        (2, "Production (Legacy)"), 
+        (3, "Decommissioned"), 
+        (4, "Draft"), 
+        (5, "Unknown")
     )
     SEASONALITY_CHOICES = (
         (1, "Bushfire season"),
@@ -72,3 +78,64 @@ class ITSystemRecord(models.Model):
     # Created : Date and Time
     # Created By : Person
     # Modified By : Person
+
+    # The below fields were specified based on the existing sharepoint list.
+    # Any specification for default values or blank/null values was taken directly from the list.
+
+    system_id_name = models.CharField(max_length=255, unique=True, verbose_name="System ID - Name")
+    division =  models.PositiveSmallIntegerField(choices=DIVISION_CHOICES, verbose_name= "Division")
+    status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=1 ,verbose_name= "Status")
+    seasonality = models.PositiveSmallIntegerField(choices=SEASONALITY_CHOICES, default=5, verbose_name="Seasonality")
+    availability = models.PositiveSmallIntegerField(choices=AVAILABILITY_CHOICES, default=2, verbose_name="Availability")
+    description = models.TextField(blank=True)
+    link = models.CharField(max_length=2048, null=True, blank=True, help_text="URL to web application")
+    file_store_link = models.CharField(max_length=2048, null=True, blank=True, verbose_name="File Store Link", help_text="URL to file store")
+    system_owner = models.ForeignKey(
+        DepartmentUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="System Owner",
+        related_name="systems_owner_of",
+        help_text="IT system owner",
+    )
+    technology_custodian = models.ForeignKey(
+        DepartmentUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Technology Custodian",
+        related_name="systems_technology_custodian_of",
+        help_text="IT system technology custodian",
+    )
+    information_custodian = models.ForeignKey(
+        DepartmentUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Information Custodian",
+        related_name="systems_information_custodian_of",
+        help_text="IT system information custodian",
+    )
+    business_service_owner = models.ForeignKey(
+        DepartmentUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Business Service Owner",
+        related_name="systems_business_service_owner_of",
+        help_text="IT system business service owner",
+    )
+    vital_records = models.BooleanField(default=False)
+    disposal_authority = models.CharField(max_length=255, null=True, blank=True, verbose_name="Disposal Authority")
+    retention_and_disposal = models.CharField(max_length=255, null=True, blank=True, verbose_name="Retention and Disposal")
+    sensitivity =  models.PositiveSmallIntegerField(choices=SENSITIVITY_CHOICES, default=1, null = True, blank=True, verbose_name="Sensitivity")
+    system_type = models.PositiveSmallIntegerField(choices = SYSTEM_TYPE_CHOICES, default = 1, null=True, blank=True, verbose_name="System Type")
+    ubcs = models.CharField(max_length=255, null=True, blank=True, verbose_name="UBCS")
+    created_date = models.DateTimeField(auto_now_add=True, verbose_name="Created")
+    created_by = models.EmailField(editable=False, verbose_name="Created By")
+    modified_date = models.DateTimeField(auto_now=True, verbose_name= "Modified")
+    modified_by = models.EmailField(editable=False, verbose_name="Modified By")
+
+    def __str__(self):
+        return self.system_id_name

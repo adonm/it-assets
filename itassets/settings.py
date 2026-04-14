@@ -73,6 +73,7 @@ INSTALLED_APPS = (
     "webtemplate_dbca",
     "organisation",
     "registers",
+    "itsystems",
 )
 
 MIDDLEWARE = [
