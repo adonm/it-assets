@@ -81,7 +81,8 @@ class ITSystemRecord(models.Model):
     # The below fields were specified based on the existing sharepoint list.
     # Any specification for default values or blank/null values was taken directly from the list.
 
-    system_id_name = models.CharField(max_length=255, unique=True, verbose_name="System ID - Name")
+    system_id = models.CharField(max_length=255, unique=True, verbose_name="System ID")
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
     division =  models.PositiveSmallIntegerField(choices=DIVISION_CHOICES, verbose_name= "Division")
     status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=1 ,verbose_name= "Status")
     seasonality = models.PositiveSmallIntegerField(choices=SEASONALITY_CHOICES, default=5, verbose_name="Seasonality")
@@ -138,3 +139,7 @@ class ITSystemRecord(models.Model):
 
     def __str__(self):
         return self.system_id_name
+    
+    @property
+    def system_id_name(self):
+        return self.system_id + " - " + self.name
