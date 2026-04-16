@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView
+from django.views.generic import ListView, View
+from django.http import HttpResponse
 
 from .models import ITSystemRecord
 
@@ -15,3 +16,11 @@ class ITSystemsRegister(LoginRequiredMixin, ListView):
         context["site_acronym"] = "OIM"
         context["page_title"] = "IT Systems Register"
         return super().get_context_data(**kwargs)
+    
+class ExportRegisterAsCSV(View):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse(content="EXPORT OK")
+
+class ImportRegisterChangesFromCSV(View):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse(content="IMPORT OK")

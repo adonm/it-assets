@@ -1,0 +1,12 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+    {% if not is_popup %}
+        <li>
+            <a href="{% url 'admin:itsystems_itsystemrecord_export' %}">Export to CSV</a>
+        </li>
+        <li>
+            <a href="{% url 'admin:itsystems_itsystemrecord_import' %}">Import from CSV</a>
+        </li>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

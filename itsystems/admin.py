@@ -1,9 +1,12 @@
 from django.contrib import admin
+from django.urls import path
 
 from .models import ITSystemRecord
+from .views import ExportRegisterAsCSV, ImportRegisterChangesFromCSV
 
 @admin.register(ITSystemRecord)
 class ITSystemRecordAdmin(admin.ModelAdmin):
+    change_list_template = "admin/itsystems/itsystemrecord/change_list.html"
     list_display = (
         "system_id_name",
         "status",
@@ -94,3 +97,21 @@ class ITSystemRecordAdmin(admin.ModelAdmin):
         if obj:
             readonly_fields = tuple(readonly_fields) + ('system_id', )  
         return readonly_fields
+    
+    # Provides admin URLs for the import & export buttons
+    def get_urls(self):
+        urls = super().get_urls()
+        info = self.opts.app_label, self.opts.model_name
+        urls = [
+            path(
+                "import/",
+                ImportRegisterChangesFromCSV.as_view(),
+                name=f"{info[0]}_{info[1]}_import",
+            ),
+            path(
+                "export/",
+                ExportRegisterAsCSV.as_view(),
+                name=f"{info[0]}_{info[1]}_export",
+            ),
+        ] + urls
+        return urls
