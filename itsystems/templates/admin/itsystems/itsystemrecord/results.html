@@ -1,0 +1,73 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+    <h1>Results</h1>
+    <br>
+    {% if failed %}
+        <h2>Failures</h2>
+        <table>
+            <thead>
+                <th>Record</th>
+                <th>Reason</th>
+            </thead>
+            <tbody>
+                {% for failure in failed %}
+                    <td>{{failure.record}}</td>
+                    <td>{{failure.change}}</td>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+    {% endif %}
+
+    <h2>Updated Systems</h2>
+    {% if updated %}
+        {% for update in updated %}
+            <h3>{{update.record}}</h3>
+            <table>
+                <thead>
+                    <th>Field</th>
+                    <th>New</th>
+                    <th>Old</th>
+                </thead>
+                <tbody>
+                {% for change in update.changes%}
+                <tr>
+                    <td>{{change.field}}</td>
+                    <td>{{change.new}}</td>
+                    <td>{{change.old}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            <br>
+        {% endfor %}
+    {% else %}
+        <p>No updates were made.</p>
+    {% endif %}
+
+    <br>
+    <h2>Created Systems</h2>
+    {% if created %}
+        {% for create in created %}
+            <h3>{{create.record}}</h3>
+            <table>
+                <thead>
+                    <th>Field</th>
+                    <th>New</th>
+                    <th>Old</th>
+                </thead>
+                <tbody>
+                {% for change in create.changes%}
+                <tr>
+                    <td>{{change.field}}</td>
+                    <td>{{change.new}}</td>
+                    <td>{{change.old}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        {% endfor %}
+    {% else %}
+        <p>No additions were made.</p>
+    {% endif %}
+{% endblock %}

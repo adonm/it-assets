@@ -5,7 +5,25 @@
             <a href="{% url 'admin:itsystems_itsystemrecord_export' %}">Export to CSV</a>
         </li>
         <li>
-            <a href="{% url 'admin:itsystems_itsystemrecord_import' %}">Import from CSV</a>
+            <a href="{% url 'admin:itsystems_itsystemrecord_import' %}" onClick="openCenteredPopup(this.href); return false;">Import from CSV</a>
+            <script>
+                // Opens 600x400 popup in the centre of the screen.availHeight
+                function openCenteredPopup(href) {  
+                    const popupWidth = 600;  
+                    const popupHeight = 400;  
+                    
+                    const screenWidth = screen.availWidth;  
+                    const screenHeight = screen.availHeight;  
+                    
+                    const left = (screenWidth - popupWidth) / 2;  
+                    const top = (screenHeight - popupHeight) / 2; 
+                    
+                    const windowFeatures = `width=${600},height=${400},left=${left},top=${top}`;  
+                    
+                    // 5. Open the popup  
+                    window.open(href,'new', windowFeatures);
+                }  
+            </script>
         </li>
     {% endif %}
     {{ block.super }}

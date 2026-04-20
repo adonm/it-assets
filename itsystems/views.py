@@ -1,13 +1,12 @@
 from datetime import date, datetime
-import csv
 
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, View
+from django.views.generic import ListView, View, TemplateView
 from django.http import HttpResponse
 
 from .models import ITSystemRecord
-from .csv_handling import ExportCSV
+from .csv_handling import ExportCSV, ImportCSV
 
 class ITSystemsRegister(LoginRequiredMixin, ListView):
     template_name = "itsystems/it_systems_register.html"
@@ -21,16 +20,22 @@ class ITSystemsRegister(LoginRequiredMixin, ListView):
         context["page_title"] = "IT Systems Register"
         return super().get_context_data(**kwargs)
     
-class ExportRegisterAsCSV(View):
+class ExportRegisterAsCSV(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         attachment_header = 'attachment; filename="it_systems_register_' + str(date.today().isoformat()) + '_' + str(datetime.now().strftime('%H%M')) + '.csv"'
         response = HttpResponse(
             content_type="text/csv",
             headers={"Content-Disposition":attachment_header}
         )
-        ExportCSV(writer=csv.writer(response))
+        ExportCSV(response)
         return response
 
-class ImportRegisterChangesFromCSV(View):
+class ImportRegisterChangesFromCSV(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        return HttpResponse(content="IMPORT OK")
+        response = render(request, "admin/itsystems/itsystemrecord/upload_csv.html")
+        return response
+
+    def post(self, request, *args, **kwargs):
+        results = ImportCSV(request)
+        response = render(request, "admin/itsystems/itsystemrecord/results.html", context = results)
+        return HttpResponse(response)

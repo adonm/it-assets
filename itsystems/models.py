@@ -137,6 +137,31 @@ class ITSystemRecord(models.Model):
     modified_date = models.DateTimeField(auto_now=True, verbose_name= "Modified")
     modified_by = models.EmailField(editable=False, verbose_name="Modified By")
 
+    # Compares itself with another instance, returning a list of differences of changes
+    def compare(self, obj):
+        excluded_fields = ['created_date','modified_date', 'created_by', 'modified_by', 'id', '_state']
+        changes = []
+        if obj:
+            self_fields = self.__dict__
+            obj_fields = obj.__dict__
+
+            for self_val, obj_val in self_fields.items():
+                if not (self_val in excluded_fields):
+                    try:
+                        if self_fields[self_val] != obj_fields[self_val]:
+                            print(str(self_val) + ": " + str(obj_fields[self_val]) + " > " + str(self_fields[self_val]))
+                            changes.append({"field": str(self_val), "old":self_fields[self_val], "new": obj_fields[self_val] })
+                    except KeyError as e:
+                        print("couldn't find " + self_val)
+                        print(e)
+        else:
+            self_fields = self.__dict__
+            for self_val in self_fields.items():
+                if not (self_val[0] in excluded_fields):
+                    changes.append({"field": self_val[0], "old":None, "new": self_val[1] })
+
+        return changes
+
     def __str__(self):
         return self.system_id_name
     
