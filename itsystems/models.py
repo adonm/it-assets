@@ -53,43 +53,19 @@ class ITSystemRecord(models.Model):
         (8,"Nature-based Tourism Branch"),
     )
 
-    # ORIGINAL FIELDS:
-    # --------------------
-    # System ID - Name : Single Line of Text
-    # Division : Choice
-    # Status : Choice
-    # Seasonality : Choice
-    # Availability : Choice
-    # Description : Multiple Lines of Text
-    # Link : Hyperlink
-    # File Store Link : Hyperlink
-    # System Owner : Person
-    # Technology Custodian : Person
-    # Information Custodian : Person
-    # Business Service Owner : Person
-    # Vital Records : Boolean
-    # Disposal Authority: Single Line of Text
-    # Retention and Disposal: Single Line of Text
-    # Sensitivity: Single Line of Text
-    # System Type : Choice
-    # UBCS: Single Line of Text
-    # Modified : Date and Time
-    # Created : Date and Time
-    # Created By : Person
-    # Modified By : Person
-
-    # The below fields were specified based on the existing sharepoint list.
-    # Any specification for default values or blank/null values was taken directly from the list.
-
     system_id = models.CharField(max_length=255, unique=True, verbose_name="System ID")
-    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
-    division =  models.PositiveSmallIntegerField(choices=DIVISION_CHOICES, verbose_name= "Division")
+    name = models.CharField(max_length=255, verbose_name="Name")
     status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=1 ,verbose_name= "Status")
-    seasonality = models.PositiveSmallIntegerField(choices=SEASONALITY_CHOICES, default=5, verbose_name="Seasonality")
-    availability = models.PositiveSmallIntegerField(choices=AVAILABILITY_CHOICES, default=2, verbose_name="Availability")
-    description = models.TextField(blank=True)
-    link = models.URLField(max_length=2048, null=True, blank=True, help_text="URL to web application")
-    file_store_link = models.URLField(max_length=2048, null=True, blank=True, verbose_name="File Store Link", help_text="URL to file store")
+    division =  models.PositiveSmallIntegerField(choices=DIVISION_CHOICES, null=True, blank=True, verbose_name= "Division")
+    business_service_owner = models.ForeignKey(
+        DepartmentUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Business Service Owner",
+        related_name="systems_business_service_owner_of",
+        help_text="IT system business service owner",
+    )
     system_owner = models.ForeignKey(
         DepartmentUser,
         on_delete=models.SET_NULL,
@@ -117,21 +93,19 @@ class ITSystemRecord(models.Model):
         related_name="systems_information_custodian_of",
         help_text="IT system information custodian",
     )
-    business_service_owner = models.ForeignKey(
-        DepartmentUser,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name="Business Service Owner",
-        related_name="systems_business_service_owner_of",
-        help_text="IT system business service owner",
-    )
+    seasonality = models.PositiveSmallIntegerField(choices=SEASONALITY_CHOICES, default=5, verbose_name="Seasonality")
+    availability = models.PositiveSmallIntegerField(choices=AVAILABILITY_CHOICES, default=2, verbose_name="Availability")
+    link = models.URLField(max_length=2048, null=True, blank=True, help_text="URL to web application")
+    description = models.TextField(blank=True)
+    file_store_link = models.URLField(max_length=2048, null=True, blank=True, verbose_name="File Store Link", help_text="URL to file store")
     vital_records = models.BooleanField(default=False)
     disposal_authority = models.CharField(max_length=255, null=True, blank=True, verbose_name="Disposal Authority")
     retention_and_disposal = models.CharField(max_length=255, null=True, blank=True, verbose_name="Retention and Disposal")
+    ubcs = models.CharField(max_length=255, null=True, blank=True, verbose_name="UBCS")
     sensitivity =  models.PositiveSmallIntegerField(choices=SENSITIVITY_CHOICES, default=1, null = True, blank=True, verbose_name="Sensitivity")
     system_type = models.PositiveSmallIntegerField(choices = SYSTEM_TYPE_CHOICES, default = 1, null=True, blank=True, verbose_name="System Type")
-    ubcs = models.CharField(max_length=255, null=True, blank=True, verbose_name="UBCS")
+
+    # Meta-Data fields
     created_date = models.DateTimeField(auto_now_add=True, verbose_name="Created")
     created_by = models.EmailField(editable=False, verbose_name="Created By")
     modified_date = models.DateTimeField(auto_now=True, verbose_name= "Modified")
@@ -149,7 +123,6 @@ class ITSystemRecord(models.Model):
                 if not (self_val in excluded_fields):
                     try:
                         if self_fields[self_val] != obj_fields[self_val]:
-                            print(str(self_val) + ": " + str(obj_fields[self_val]) + " > " + str(self_fields[self_val]))
                             changes.append({"field": str(self_val), "old":self_fields[self_val], "new": obj_fields[self_val] })
                     except KeyError as e:
                         print("couldn't find " + self_val)

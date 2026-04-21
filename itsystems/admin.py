@@ -7,6 +7,9 @@ from .views import ExportRegisterAsCSV, ImportRegisterChangesFromCSV
 @admin.register(ITSystemRecord)
 class ITSystemRecordAdmin(admin.ModelAdmin):
     change_list_template = "admin/itsystems/itsystemrecord/change_list.html"
+
+    ordering = ['system_id']
+
     list_display = (
         "system_id_name",
         "status",
@@ -80,6 +83,8 @@ class ITSystemRecordAdmin(admin.ModelAdmin):
 
 
     search_fields = ("system_id","name", "description")
+
+    autocomplete_fields = ("system_owner","technology_custodian","information_custodian","business_service_owner")
 
     list_filter = ("division", "status")
 

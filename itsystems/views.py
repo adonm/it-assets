@@ -37,5 +37,9 @@ class ImportRegisterChangesFromCSV(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         results = ImportCSV(request)
-        response = render(request, "admin/itsystems/itsystemrecord/results.html", context = results)
+        if results['validation']['valid']:
+            response = render(request, "admin/itsystems/itsystemrecord/results.html", context = results)
+        else:
+            print(results['validation'])
+            response = render(request, "admin/itsystems/itsystemrecord/upload_csv.html", context = results['validation'])
         return HttpResponse(response)

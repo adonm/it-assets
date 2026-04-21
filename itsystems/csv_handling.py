@@ -12,23 +12,23 @@ def ExportCSV(response):
         record_vals = [
             record.system_id,
             record.name,
-            record.get_division_display(),
             record.get_status_display(),
-            record.get_seasonality_display(),
-            record.get_availability_display(),
-            record.description,
-            record.link,
-            record.file_store_link,
+            record.get_division_display(),
+            record.business_service_owner.email if record.business_service_owner else "",
             record.system_owner.email,
             record.technology_custodian.email if record.technology_custodian else "",
             record.information_custodian.email if record.information_custodian else "",
-            record.business_service_owner.email if record.business_service_owner else "",
+            record.get_seasonality_display(),
+            record.get_availability_display(),
+            record.link,
+            record.description,
+            record.file_store_link,
             record.vital_records,
             record.disposal_authority,
             record.retention_and_disposal,
+            record.ubcs,
             record.get_sensitivity_display(),
-            record.get_system_type_display(),
-            record.ubcs
+            record.get_system_type_display()
         ]
         writer.writerow(record_vals)
 
@@ -67,23 +67,27 @@ def ImportCSV(request):
                     changes = new_record.compare(None)
                     create_list.append({"record":new_record.system_id_name, "changes":changes})
             except Exception as e:
-                failed_list.append({"record":record['system_id'], "changes": ("Failed to make changes: " + str(e))})
-                print(str(e))
+                if hasattr(e, 'message'):
+                    error_message = e.message
+                else:
+                    error_message = str(e)
+                failed_list.append({"record":record['system_id'], "changes": error_message})
 
     else:
         print(validate_results['message'])
 
-    return {'created':create_list,'updated':update_list, 'failed':failed_list}
+    return {'validation':{'valid':validate_results['valid'], 'message':validate_results['message']},'created':create_list,'updated':update_list, 'failed':failed_list}
 
 
 def __validate_csv(csv_file):
     valid = False
     msg = ""
+    raw_text = None
     # Checks that file is a CSV
     if csv_file.name.endswith(".csv"):
         # Checks that file isn't chunked / over 2 mb
         if not csv_file.multiple_chunks():
-            raw_text = csv_file.read().decode('utf-8')
+            raw_text = csv_file.read().decode(encoding='utf-8', errors='replace')
             csv_headers = raw_text.split("\r\n")[0].split(",")
             model_fields = __get_model_fields()
             # Checks that csv has the correct headers
@@ -91,11 +95,11 @@ def __validate_csv(csv_file):
                 valid = True
                 msg = "CSV is Valid"
             else:
-                msg = "CSV Headers are invalid\n" + str(csv_headers) + "\n" + str(model_fields)
+                msg = "CSV Headers do not match the required format"
         else:
-            msg = "File size is too large (>2MB)"
+            msg = "File size is too large (>2MB)."
     else:
-        msg = "File isn't a CSV"
+        msg = "The selected file isn't a CSV"
     return {"valid":valid, "message":msg, "raw_text":raw_text}
 
 def load_data(new_record, record):
@@ -124,9 +128,20 @@ def __get_choice_val(text,choicelist):
     return choice[0]
 
 def __get_user_fk(email):
+    user = None
+    suffix = "@dbca.wa.gov.au"
+    email_query = None
     try:
-        user = DepartmentUser.objects.get(email=email)
-    except:
+        if email:
+            if email.endswith(suffix):
+                email_query = email
+            elif " " in email:
+                names = email.split(" ")
+                email_query = names[0].lower() + "." + "".join(names[1:]).lower() + suffix
+        if email_query:
+            user = DepartmentUser.objects.get(email=email_query)
+    except Exception as e:
+        print(str(e) + ": " + email)
         user = None
     return user
 

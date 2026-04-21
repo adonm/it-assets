@@ -1,9 +1,12 @@
 {% extends "admin/base_site.html" %}
+{% block breadcrumbs %}
+{% endblock %}
 {% block content %}
-    <h1>Results</h1>
+    <h1 style="color:LightGreen">Import Complete</h1>
+    See changes below
     <br>
     {% if failed %}
-        <h2>Failures</h2>
+        <h2 style="color:Tomato">Failures</h2>
         <table>
             <thead>
                 <th>Record</th>
@@ -11,8 +14,10 @@
             </thead>
             <tbody>
                 {% for failure in failed %}
+                <tr>
                     <td>{{failure.record}}</td>
-                    <td>{{failure.change}}</td>
+                    <td>{{failure.changes}}</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -42,7 +47,7 @@
             <br>
         {% endfor %}
     {% else %}
-        <p>No updates were made.</p>
+        <p>No records were changed.</p>
     {% endif %}
 
     <br>
@@ -68,6 +73,8 @@
             </table>
         {% endfor %}
     {% else %}
-        <p>No additions were made.</p>
+        <p>No records were added.</p>
     {% endif %}
+    <br>
+    <button onclick="window.close()">Close</button>
 {% endblock %}
