@@ -1,8 +1,12 @@
 from django.contrib import admin
 from django.urls import path
 
-from .models import ITSystemRecord
+from .models import ITSystemRecord, Division
 from .views import ExportRegisterAsCSV, ImportRegisterChangesFromCSV
+
+@admin.register(Division)
+class DivisionAdmin(admin.ModelAdmin):
+    search_fields = ['name']
 
 @admin.register(ITSystemRecord)
 class ITSystemRecordAdmin(admin.ModelAdmin):
@@ -13,7 +17,7 @@ class ITSystemRecordAdmin(admin.ModelAdmin):
     list_display = (
         "system_id_name",
         "status",
-        "division",
+        "division__name",
         "business_service_owner",
         "system_owner",
         "technology_custodian",

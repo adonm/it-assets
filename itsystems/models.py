@@ -2,6 +2,17 @@ from django.db import models
 
 from organisation.models import DepartmentUser
 
+class Division(models.Model):
+    class Meta:
+        verbose_name = "Division"
+        verbose_name_plural = "Divisions"
+
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
+
+    def __str__(self):
+        return self.name
+
+
 class ITSystemRecord(models.Model):
     """Represents a named system providing a package of functionality to
     Department staff (normally vendor or bespoke software), which is supported
@@ -40,23 +51,18 @@ class ITSystemRecord(models.Model):
         (2, "Official Sensitive"),
     )
 
-    # This probably shouldn't be hardcoded, at the very least it should reference an existing dataset.
-    # Also, a lot of these are outdated and should be revised
-    DIVISION_CHOICES = (
-        (1,"Botanic Gardens and Parks Authority"),
-        (2,"Conservation and Parks Commission"),
-        (3,"DBCA Biodiversity and Conservation Science"),
-        (4,"DBCA Strategy and Governance"),
-        (5,"Parks and Wildlife Service"),
-        (6,"Rottnest Island Authority"),
-        (7,"Zoological Parks Authority"),
-        (8,"Nature-based Tourism Branch"),
-    )
-
     system_id = models.CharField(max_length=255, unique=True, verbose_name="System ID")
     name = models.CharField(max_length=255, verbose_name="Name")
     status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=1 ,verbose_name= "Status")
-    division =  models.PositiveSmallIntegerField(choices=DIVISION_CHOICES, null=True, blank=True, verbose_name= "Division")
+    division =  models.ForeignKey(
+        Division,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Division",
+        related_name="assigned_division",
+        help_text="Division",
+    )
     business_service_owner = models.ForeignKey(
         DepartmentUser,
         on_delete=models.SET_NULL,
