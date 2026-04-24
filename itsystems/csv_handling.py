@@ -15,7 +15,7 @@ def ExportCSV(response):
             record.get_status_display(),
             record.division.name if record.division else "",
             record.business_service_owner.email if record.business_service_owner else "",
-            record.system_owner.email,
+            record.system_owner.email if record.system_owner else "",
             record.technology_custodian.email if record.technology_custodian else "",
             record.information_custodian.email if record.information_custodian else "",
             record.get_seasonality_display(),
@@ -53,12 +53,12 @@ def ImportCSV(request):
             try:
                 # Populate new record with data
                 new_record = ITSystemRecord()
-                load_data(new_record,record)
+                __load_data(new_record,record)
 
                 if found_record:
                     changes = found_record.compare(new_record)
                     if len(changes)>0:
-                        load_data(found_record,record)
+                        __load_data(found_record,record)
                         found_record.modified_by = request.user.email
                         found_record.save()
                         update_list.append({"record":found_record.system_id_name, "changes":changes})
@@ -104,7 +104,7 @@ def __validate_csv(csv_file):
         msg = "The selected file isn't a CSV"
     return {"valid":valid, "message":msg, "raw_text":raw_text}
 
-def load_data(new_record, record):
+def __load_data(new_record, record):
     fail_list= []
 
     new_record.system_id = record['system_id']
@@ -156,7 +156,8 @@ def __get_user_fk(email, field):
 def __get_division_fk(name):
     fk = None
     try:
-        fk = Division.objects.get(name=name)
+        if name:
+            fk = Division.objects.get(name=name)
     except Exception as e:
         print(str(e))
         raise Exception("Division: Can't find option '" + name + "'.")

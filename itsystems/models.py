@@ -102,7 +102,7 @@ class ITSystemRecord(models.Model):
     seasonality = models.PositiveSmallIntegerField(choices=SEASONALITY_CHOICES, default=5, verbose_name="Seasonality")
     availability = models.PositiveSmallIntegerField(choices=AVAILABILITY_CHOICES, default=2, verbose_name="Availability")
     link = models.URLField(max_length=2048, null=True, blank=True, help_text="URL to web application")
-    description = models.TextField(blank=True)
+    description = models.TextField(null=True, blank=True)
     file_store_link = models.URLField(max_length=2048, null=True, blank=True, verbose_name="File Store Link", help_text="URL to file store")
     vital_records = models.BooleanField(default=False)
     disposal_authority = models.CharField(max_length=255, null=True, blank=True, verbose_name="Disposal Authority")
@@ -119,7 +119,7 @@ class ITSystemRecord(models.Model):
 
     # Compares itself with another instance, returning a list of differences of changes
     def compare(self, obj):
-        excluded_fields = ['created_date','modified_date', 'created_by', 'modified_by', 'id', '_state']
+        excluded_fields = ['created_date','modified_date', 'created_by', 'modified_by', 'id', '_state', 'system_id']
         changes = []
         if obj:
             self_fields = self.__dict__
@@ -128,7 +128,8 @@ class ITSystemRecord(models.Model):
             for self_val, obj_val in self_fields.items():
                 if not (self_val in excluded_fields):
                     try:
-                        if self_fields[self_val] != obj_fields[self_val]:
+                        #  obj_fileds' 'Or None' accounts for empty string values, self fields' 'Or None' allows for Boolean 'False' equivalency
+                        if (self_fields[self_val] or None) != (obj_fields[self_val] or None):
                             changes.append({"field": str(self_val), "old":self_fields[self_val], "new": obj_fields[self_val] })
                     except KeyError as e:
                         print("couldn't find " + self_val)
@@ -143,6 +144,23 @@ class ITSystemRecord(models.Model):
 
     def __str__(self):
         return self.system_id_name
+    
+    def save(self, *args, **kwargs):
+        if self.description == '':
+            self.description = None
+        if self.link == '':
+            self.link = None
+        if self.file_store_link == '':
+            self.file_store_link = None
+        if self.disposal_authority == '':
+            self.disposal_authority = None
+        if self.retention_and_disposal == '':
+            self.retention_and_disposal = None
+        if self.ubcs == '':
+            self.ubcs = None
+
+        super(ITSystemRecord, self).save(*args, **kwargs)
+
     
     @property
     def system_id_name(self):
