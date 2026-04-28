@@ -15,6 +15,89 @@ class Division(models.Model):
     def __str__(self):
         return self.name
 
+class Status(models.Model):
+    """
+    Represents the status of a IT System.
+    """
+    class Meta:
+        verbose_name = "Status"
+        verbose_name_plural = "Statuses"
+
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
+
+    @classmethod
+    def get_default_pk(cls):
+        return Status.objects.get_or_create(name='Production')[0].pk
+
+    def __str__(self):
+        return self.name
+
+class Seasonality(models.Model):
+    """
+    Represents the seasonality of an IT System within DBCA.
+    """
+    class Meta:
+        verbose_name = "Seasonality"
+        verbose_name_plural = "Seasonalities"
+
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
+
+    @classmethod
+    def get_default_pk(cls):
+        return Seasonality.objects.get_or_create(name='Default')[0].pk
+
+    def __str__(self):
+        return self.name
+    
+class Availability(models.Model):
+    """
+    Represents the availability of an IT System within DBCA.
+    """
+    class Meta:
+        verbose_name = "Availability"
+        verbose_name_plural = "Availabilities"
+
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
+
+    @classmethod
+    def get_default_pk(cls):
+        return Availability.objects.get_or_create(name='Business hours')[0].pk
+
+    def __str__(self):
+        return self.name
+class SystemType(models.Model):
+    """
+    Represents the system type of an IT System within DBCA.
+    """
+    class Meta:
+        verbose_name = "System Type"
+        verbose_name_plural = "System Types"
+
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
+
+    @classmethod
+    def get_default_pk(cls):
+        return SystemType.objects.get_or_create(name='Application')[0].pk
+    
+    def __str__(self):
+        return self.name
+
+class Sensitivity(models.Model):
+    """
+    Represents the sensitivity of an IT System within DBCA.
+    """
+    class Meta:
+        verbose_name = "Sensitivity"
+        verbose_name_plural = "Sensitivities"
+
+    name = models.CharField(max_length=255, unique=True, verbose_name="Name")
+
+    @classmethod
+    def get_default_pk(cls):
+        return Sensitivity.objects.get_or_create(name='Official')[0].pk
+
+    def __str__(self):
+        return self.name
 
 class ITSystemRecord(models.Model):
     """Represents a named system providing a package of functionality to
@@ -26,43 +109,20 @@ class ITSystemRecord(models.Model):
         verbose_name = "IT System"
         verbose_name_plural = "IT Systems"
 
-    # Choices for choice-fields
-    # These may eventually be converted to independent models depending on business needs
-    STATUS_CHOICES = (
-        (1, "Production"), 
-        (2, "Production (Legacy)"), 
-        (3, "Decommissioned"), 
-        (4, "Draft"), 
-        (5, "Unknown")
-    )
-    SEASONALITY_CHOICES = (
-        (1, "Bushfire season"),
-        (2, "End of financial year"),
-        (3, "Annual reporting"),
-        (4, "School holidays"),
-        (5, "Default"),
-    )
-    AVAILABILITY_CHOICES = (
-        (1, "24/7/365"),
-        (2, "Business hours"),
-    )
-    SYSTEM_TYPE_CHOICES = (
-        (1, "Application"),
-        (2, "Infrastructure"),
-        (3, "Platform"),
-    )
-    SENSITIVITY_CHOICES = (
-        (1, "Official"),
-        (2, "Official Sensitive"),
-    )
-
     # Standard IT System fields
     system_id = models.CharField(max_length=255, unique=True, verbose_name="System ID")
     name = models.CharField(max_length=255, verbose_name="Name")
-    status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=1 ,verbose_name= "Status")
+    status = models.ForeignKey(
+        Status,
+        on_delete=models.PROTECT,
+        verbose_name="Status",
+        default=Status.get_default_pk,
+        related_name="assigned_status",
+        help_text="Status",
+    )
     division =  models.ForeignKey(
         Division,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         null=True,
         blank=True,
         verbose_name="Division",
@@ -105,8 +165,22 @@ class ITSystemRecord(models.Model):
         related_name="systems_information_custodian_of",
         help_text="IT system information custodian",
     )
-    seasonality = models.PositiveSmallIntegerField(choices=SEASONALITY_CHOICES, default=5, verbose_name="Seasonality")
-    availability = models.PositiveSmallIntegerField(choices=AVAILABILITY_CHOICES, default=2, verbose_name="Availability")
+    seasonality = models.ForeignKey(
+        Seasonality,
+        on_delete=models.PROTECT,
+        default = Seasonality.get_default_pk,
+        verbose_name="Seasonality",
+        related_name="assigned_seasonality",
+        help_text="Seasonality",
+    )
+    availability = models.ForeignKey(
+        Availability,
+        on_delete=models.PROTECT,
+        default = Availability.get_default_pk,
+        verbose_name="Availability",
+        related_name="assigned_availability",
+        help_text="Availability",
+    )
     link = models.URLField(max_length=2048, null=True, blank=True, help_text="URL to web application")
     description = models.TextField(null=True, blank=True)
     file_store_link = models.URLField(max_length=2048, null=True, blank=True, verbose_name="File Store Link", help_text="URL to file store")
@@ -114,8 +188,26 @@ class ITSystemRecord(models.Model):
     disposal_authority = models.CharField(max_length=255, null=True, blank=True, verbose_name="Disposal Authority")
     retention_and_disposal = models.CharField(max_length=255, null=True, blank=True, verbose_name="Retention and Disposal")
     ubcs = models.CharField(max_length=255, null=True, blank=True, verbose_name="UBCS")
-    sensitivity =  models.PositiveSmallIntegerField(choices=SENSITIVITY_CHOICES, default=1, null = True, blank=True, verbose_name="Sensitivity")
-    system_type = models.PositiveSmallIntegerField(choices = SYSTEM_TYPE_CHOICES, default = 1, null=True, blank=True, verbose_name="System Type")
+    sensitivity =  models.ForeignKey(
+        Sensitivity,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        default = Sensitivity.get_default_pk,
+        verbose_name="Sensitivity",
+        related_name="assigned_sensitivity",
+        help_text="Sensitivity",
+    )
+    system_type = models.ForeignKey(
+        SystemType,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        default = SystemType.get_default_pk,
+        verbose_name="System Type",
+        related_name="assigned_system_type",
+        help_text="System Type",
+    )
 
     # Meta-Data fields
     created_date = models.DateTimeField(auto_now_add=True, verbose_name="Created")
@@ -187,49 +279,52 @@ class ITSystemRecord(models.Model):
     def override_from_dict(self, dict, plain_text = True):
         """
         Overrides the inputted record with it's own field values.
-        If plain_text is false, data with choice or fk values is interpreted literally instead of as plain text
+        If plain_text is false, data with fk values is interpreted literally instead of as plain text
         """
-        self.system_id = dict['system_id']
-        self.name = dict['name']
-        self.description = dict['description']
-        self.link = dict['link']
-        self.file_store_link = dict['file_store_link']
-        self.disposal_authority = dict['disposal_authority']
-        self.retention_and_disposal = dict['retention_and_disposal']
-        self.ubcs = dict['ubcs']
+        self.system_id = dict.get('system_id')
+        self.name = dict.get('name')
+        self.description = dict.get('description')
+        self.link = dict.get('link')
+        self.file_store_link = dict.get('file_store_link')
+        self.disposal_authority = dict.get('disposal_authority')
+        self.retention_and_disposal = dict.get('retention_and_disposal')
+        self.ubcs = dict.get('ubcs')
         if plain_text:
-            self.division = self.__get_division_fk(dict['division'])
-            self.status = self.__get_choice_val(dict['status'],self.STATUS_CHOICES, 'status')
-            self.seasonality = self.__get_choice_val(dict['seasonality'],self.SEASONALITY_CHOICES, 'seasonality')
-            self.availability = self.__get_choice_val(dict['availability'],self.AVAILABILITY_CHOICES, 'availability')
-            self.system_owner = self.__get_user_fk(dict['system_owner'],'system_owner')
-            self.technology_custodian = self.__get_user_fk(dict['technology_custodian'],'technology_custodian')
-            self.information_custodian = self.__get_user_fk(dict['information_custodian'],'information_custodian')
-            self.business_service_owner = self.__get_user_fk(dict['business_service_owner'],'business_service_owner')
-            self.sensitivity = self.__get_choice_val(dict['sensitivity'],self.SENSITIVITY_CHOICES, 'sensitivity')
-            self.system_type = self.__get_choice_val(dict['system_type'],self.SYSTEM_TYPE_CHOICES, 'system_type')
-            self.vital_records = dict['vital_records'].lower().strip()=='true'
+            self.division = self.__get_choice_fk(dict.get('division'), Division)
+            self.status =  self.__get_choice_fk(dict.get('status'), Status)
+            self.seasonality =   self.__get_choice_fk(dict.get('seasonality'), Seasonality)
+            self.availability =   self.__get_choice_fk(dict.get('availability'), Availability)
+            self.system_owner = self.__get_user_fk(dict.get('system_owner'),'system_owner')
+            self.technology_custodian = self.__get_user_fk(dict.get('technology_custodian'),'technology_custodian')
+            self.information_custodian = self.__get_user_fk(dict.get('information_custodian'),'information_custodian')
+            self.business_service_owner = self.__get_user_fk(dict.get('business_service_owner'),'business_service_owner')
+            self.sensitivity =  self.__get_choice_fk(dict.get('sensitivity'),Sensitivity)
+            self.system_type =  self.__get_choice_fk(dict.get('system_type'),SystemType)
+            self.vital_records = dict.get('vital_records').lower().strip()=='true'
         else:
-            self.division = Division.objects.get(pk=dict['division_id'])
-            self.status = dict['status']
-            self.seasonality = dict['seasonality']
-            self.availability = dict['availability']
-            self.system_owner = DepartmentUser.objects.get(pk = dict['system_owner_id'])
-            self.technology_custodian = DepartmentUser.objects.get(pk = dict['technology_custodian_id'])
-            self.information_custodian = DepartmentUser.objects.get(pk = dict['information_custodian_id'])
-            self.business_service_owner = DepartmentUser.objects.get(pk = dict['business_service_owner_id'])
-            self.sensitivity = dict['sensitivity']
-            self.system_type = dict['system_type']
-            self.vital_records = dict['vital_records']
+            self.division = Division.objects.get(pk=dict.get('division_id'))
+            self.status = Status.objects.get(pk=dict.get('status_id'))
+            self.seasonality = Seasonality.objects.get(pk=dict.get('seasonality_id'))
+            self.availability = Availability.objects.get(pk=dict.get('availability_id'))
+            self.system_owner = DepartmentUser.objects.get(pk = dict.get('system_owner_id'))
+            self.technology_custodian = DepartmentUser.objects.get(pk = dict.get('technology_custodian_id'))
+            self.information_custodian = DepartmentUser.objects.get(pk = dict.get('information_custodian_id'))
+            self.business_service_owner = DepartmentUser.objects.get(pk = dict.get('business_service_owner_id'))
+            self.sensitivity = Sensitivity.objects.get(pk=dict.get('sensitivity_id'))
+            self.system_type = SystemType.objects.get(pk=dict.get('system_type_id'))
+            self.vital_records = dict.get('vital_records')
 
-    def __get_choice_val(self, text,choicelist, field):
+    def __get_choice_fk(self, text, ChoiceClass):
         """
-        Retrieves a choice id from an inputted choice display value.
+        Retrieves a division id from the inputted text value
         """
-        choice = next((choice for choice in choicelist if text in choice),[None])
-        if text and not choice[0]:
-            raise Exception(field + ": Can't find '" + text + "' in options " + str(choicelist) + "." )
-        return choice[0]
+        fk = None
+        try:
+            if text:
+                fk = ChoiceClass.objects.get(name=text)
+        except Exception as e:
+            raise Exception(str(ChoiceClass._meta.verbose_name) + ": Can't find option '" + text + "'.")
+        return fk
 
     def __get_user_fk(self, email, field):
         """
@@ -248,21 +343,7 @@ class ITSystemRecord(models.Model):
             if email_query:
                 user = DepartmentUser.objects.get(email=email_query)
         except Exception as e:
-            print(str(e) + ": " + email)
             if email:
                 raise Exception(field + ": Can't find user '" + email + "'.")
             user = None
         return user
-
-    def __get_division_fk(self, name):
-        """
-        Retrieves a division id from the inputted text value
-        """
-        fk = None
-        try:
-            if name:
-                fk = Division.objects.get(name=name)
-        except Exception as e:
-            print(str(e))
-            raise Exception("Division: Can't find option '" + name + "'.")
-        return fk

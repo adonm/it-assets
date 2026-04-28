@@ -15,14 +15,14 @@ def ExportCSV(response):
         record_vals = [
             record.system_id,
             record.name,
-            record.get_status_display(),
+            record.status.name if record.status else "",
             record.division.name if record.division else "",
             record.business_service_owner.email if record.business_service_owner else "",
             record.system_owner.email if record.system_owner else "",
             record.technology_custodian.email if record.technology_custodian else "",
             record.information_custodian.email if record.information_custodian else "",
-            record.get_seasonality_display(),
-            record.get_availability_display(),
+            record.seasonality.name if record.seasonality else "",
+            record.availability.name if record.availability else "",
             record.link,
             record.description,
             record.file_store_link,
@@ -30,8 +30,8 @@ def ExportCSV(response):
             record.disposal_authority,
             record.retention_and_disposal,
             record.ubcs,
-            record.get_sensitivity_display(),
-            record.get_system_type_display()
+            record.sensitivity.name if record.sensitivity else "",
+            record.system_type.name if record.system_type else ""
         ]
         writer.writerow(record_vals)
 

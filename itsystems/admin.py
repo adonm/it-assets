@@ -1,11 +1,31 @@
 from django.contrib import admin
 from django.urls import path
 
-from .models import ITSystemRecord, Division
+from .models import ITSystemRecord, Division, Seasonality, Status, Sensitivity, SystemType, Availability
 from .views import ExportRegisterAsCSV, ImportRegisterChangesFromCSV
 
 @admin.register(Division)
 class DivisionAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+
+@admin.register(Status)
+class StatusAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+
+@admin.register(Availability)
+class AvailabilityAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+
+@admin.register(Seasonality)
+class SeasonalityAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+
+@admin.register(Sensitivity)
+class SensitivityAdmin(admin.ModelAdmin):
+    search_fields = ['name']
+
+@admin.register(SystemType)
+class SystemTypeAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 @admin.register(ITSystemRecord)
@@ -41,19 +61,7 @@ class ITSystemRecordAdmin(admin.ModelAdmin):
                         "name",
                         "division",
                         "status",
-                        "link",
                         "description",
-                    ),
-                },
-            ),
-            (
-                "Contacts",
-                {
-                    "fields": (
-                        "system_owner",
-                        "technology_custodian",
-                        "information_custodian",
-                        "business_service_owner",
                     ),
                 },
             ),
@@ -61,7 +69,28 @@ class ITSystemRecordAdmin(admin.ModelAdmin):
                 "Details",
                 {
                     "fields": (
+                        "link",
                         "file_store_link",
+                        "seasonality",
+                        "availability",
+                    ),
+                },
+            ),
+            (
+                "Contacts",
+                {
+                    "fields": (
+                        "business_service_owner",
+                        "system_owner",
+                        "technology_custodian",
+                        "information_custodian",
+                    ),
+                },
+            ),
+            (
+                "Record Keeping",
+                {
+                    "fields": (
                         "vital_records",
                         "disposal_authority",
                         "retention_and_disposal",
