@@ -126,7 +126,7 @@ class ITSystemRecord(models.Model):
             obj_fields = obj.__dict__
 
             for self_val, obj_val in self_fields.items():
-                if not (self_val in excluded_fields):
+                if self_val not in excluded_fields:
                     try:
                         #  obj_fileds' 'Or None' accounts for empty string values, self fields' 'Or None' allows for Boolean 'False' equivalency
                         if (self_fields[self_val] or None) != (obj_fields[self_val] or None):
@@ -137,7 +137,7 @@ class ITSystemRecord(models.Model):
         else:
             self_fields = self.__dict__
             for self_val in self_fields.items():
-                if not (self_val[0] in excluded_fields):
+                if self_val[0] not in excluded_fields:
                     changes.append({"field": self_val[0], "old":None, "new": self_val[1] })
 
         return changes

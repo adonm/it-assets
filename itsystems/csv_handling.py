@@ -1,4 +1,5 @@
-import csv, io
+import csv
+import io
 from .models import ITSystemRecord, DepartmentUser, Division
 
 # Exports the IT System Register to a CSV file
@@ -105,8 +106,6 @@ def __validate_csv(csv_file):
     return {"valid":valid, "message":msg, "raw_text":raw_text}
 
 def __load_data(new_record, record):
-    fail_list= []
-
     new_record.system_id = record['system_id']
     new_record.name = record['name']
     new_record.division = __get_division_fk(record['division'])

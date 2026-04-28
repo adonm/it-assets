@@ -1,4 +1,5 @@
-import io, csv
+import io
+import csv
 
 from django.test import TestCase
 from django.http import HttpResponse
