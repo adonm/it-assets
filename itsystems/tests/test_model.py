@@ -144,5 +144,3 @@ def get_record_dict(record):
         if field in dict:
             del dict[field]
     return dict
-    
-
