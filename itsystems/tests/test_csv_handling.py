@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from .test_model import create_random_record
 from itsystems.models import ITSystemRecord
 from itsystems.csv_handling import __validate_csv as validate
-from itsystems.csv_handling import ExportCSV, ImportCSV, __load_data as load
+from itsystems.csv_handling import ExportCSV, ImportCSV
 
 
 class CSVHandlingTests(TestCase):
@@ -81,7 +81,7 @@ class CSVHandlingTests(TestCase):
             self.assertIsNotNone(found_record)
             if found_record:
                 new_record = ITSystemRecord()
-                load(new_record, record)
+                new_record.override_from_dict(record)
                 changes = found_record.compare(new_record)
                 print(changes)
                 self.assertIs(len(changes),0)        

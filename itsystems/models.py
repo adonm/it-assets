@@ -3,6 +3,9 @@ from django.db import models
 from organisation.models import DepartmentUser
 
 class Division(models.Model):
+    """
+    Represents a division within DBCA.
+    """
     class Meta:
         verbose_name = "Division"
         verbose_name_plural = "Divisions"
@@ -23,6 +26,8 @@ class ITSystemRecord(models.Model):
         verbose_name = "IT System"
         verbose_name_plural = "IT Systems"
 
+    # Choices for choice-fields
+    # These may eventually be converted to independent models depending on business needs
     STATUS_CHOICES = (
         (1, "Production"), 
         (2, "Production (Legacy)"), 
@@ -51,6 +56,7 @@ class ITSystemRecord(models.Model):
         (2, "Official Sensitive"),
     )
 
+    # Standard IT System fields
     system_id = models.CharField(max_length=255, unique=True, verbose_name="System ID")
     name = models.CharField(max_length=255, verbose_name="Name")
     status = models.PositiveSmallIntegerField(choices=STATUS_CHOICES, default=1 ,verbose_name= "Status")
@@ -117,8 +123,11 @@ class ITSystemRecord(models.Model):
     modified_date = models.DateTimeField(auto_now=True, verbose_name= "Modified")
     modified_by = models.EmailField(editable=False, verbose_name="Modified By")
 
-    # Compares itself with another instance, returning a list of differences of changes
     def compare(self, obj):
+        """
+        Compares a record instance with itself, returning a list of differences between the two.
+        These differences are returned in the form of dictionaries containing the field, the old (current) value, and the new (external) value.
+        """
         excluded_fields = ['created_date','modified_date', 'created_by', 'modified_by', 'id', '_state', 'system_id']
         changes = []
         if obj:
@@ -143,9 +152,16 @@ class ITSystemRecord(models.Model):
         return changes
 
     def __str__(self):
+        """
+        Overrides the default __str__ method
+        """
         return self.system_id_name
     
     def save(self, *args, **kwargs):
+        """
+        Overrides the default save method.
+        This override converts empty string values to null values.
+        """
         if self.description == '':
             self.description = None
         if self.link == '':
@@ -160,8 +176,93 @@ class ITSystemRecord(models.Model):
             self.ubcs = None
 
         super(ITSystemRecord, self).save(*args, **kwargs)
-
     
     @property
     def system_id_name(self):
+        """
+        A calculated field combining the ID of the record and the name.
+        """
         return self.system_id + " - " + self.name
+    
+    def override_from_dict(self, dict, plain_text = True):
+        """
+        Overrides the inputted record with it's own field values.
+        If plain_text is false, data with choice or fk values is interpreted literally instead of as plain text
+        """
+        self.system_id = dict['system_id']
+        self.name = dict['name']
+        self.description = dict['description']
+        self.link = dict['link']
+        self.file_store_link = dict['file_store_link']
+        self.disposal_authority = dict['disposal_authority']
+        self.retention_and_disposal = dict['retention_and_disposal']
+        self.ubcs = dict['ubcs']
+        if plain_text:
+            self.division = self.__get_division_fk(dict['division'])
+            self.status = self.__get_choice_val(dict['status'],self.STATUS_CHOICES, 'status')
+            self.seasonality = self.__get_choice_val(dict['seasonality'],self.SEASONALITY_CHOICES, 'seasonality')
+            self.availability = self.__get_choice_val(dict['availability'],self.AVAILABILITY_CHOICES, 'availability')
+            self.system_owner = self.__get_user_fk(dict['system_owner'],'system_owner')
+            self.technology_custodian = self.__get_user_fk(dict['technology_custodian'],'technology_custodian')
+            self.information_custodian = self.__get_user_fk(dict['information_custodian'],'information_custodian')
+            self.business_service_owner = self.__get_user_fk(dict['business_service_owner'],'business_service_owner')
+            self.sensitivity = self.__get_choice_val(dict['sensitivity'],self.SENSITIVITY_CHOICES, 'sensitivity')
+            self.system_type = self.__get_choice_val(dict['system_type'],self.SYSTEM_TYPE_CHOICES, 'system_type')
+            self.vital_records = dict['vital_records'].lower().strip()=='true'
+        else:
+            self.division = Division.objects.get(pk=dict['division_id'])
+            self.status = dict['status']
+            self.seasonality = dict['seasonality']
+            self.availability = dict['availability']
+            self.system_owner = DepartmentUser.objects.get(pk = dict['system_owner_id'])
+            self.technology_custodian = DepartmentUser.objects.get(pk = dict['technology_custodian_id'])
+            self.information_custodian = DepartmentUser.objects.get(pk = dict['information_custodian_id'])
+            self.business_service_owner = DepartmentUser.objects.get(pk = dict['business_service_owner_id'])
+            self.sensitivity = dict['sensitivity']
+            self.system_type = dict['system_type']
+            self.vital_records = dict['vital_records']
+
+    def __get_choice_val(self, text,choicelist, field):
+        """
+        Retrieves a choice id from an inputted choice display value.
+        """
+        choice = next((choice for choice in choicelist if text in choice),[None])
+        if text and not choice[0]:
+            raise Exception(field + ": Can't find '" + text + "' in options " + str(choicelist) + "." )
+        return choice[0]
+
+    def __get_user_fk(self, email, field):
+        """
+        Retrieves a user id from an inputted email or display name.
+        """
+        user = None
+        suffix = "@dbca.wa.gov.au"
+        email_query = None
+        try:
+            if email:
+                if email.endswith(suffix):
+                    email_query = email
+                elif " " in email:
+                    names = email.split(" ")
+                    email_query = names[0].lower() + "." + "".join(names[1:]).lower() + suffix
+            if email_query:
+                user = DepartmentUser.objects.get(email=email_query)
+        except Exception as e:
+            print(str(e) + ": " + email)
+            if email:
+                raise Exception(field + ": Can't find user '" + email + "'.")
+            user = None
+        return user
+
+    def __get_division_fk(self, name):
+        """
+        Retrieves a division id from the inputted text value
+        """
+        fk = None
+        try:
+            if name:
+                fk = Division.objects.get(name=name)
+        except Exception as e:
+            print(str(e))
+            raise Exception("Division: Can't find option '" + name + "'.")
+        return fk

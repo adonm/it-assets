@@ -2,7 +2,7 @@ from django.test import TestCase
 from mixer.backend.django import mixer
 from uuid import uuid1
 
-from itsystems.models import ITSystemRecord
+from itsystems.models import ITSystemRecord, Division
 from organisation.models import DepartmentUser
 from organisation.tests.test_models import random_string
 from itassets.test_api import random_dbca_email
@@ -43,13 +43,49 @@ class ITSystemRecordTestCase(TestCase):
         self.assertIs(single_change[0]['old'], self.record.description)
 
         # asserts multiple changes are accurately reported in the change log
-        self.assertIs(len(all_changes),6)
+        self.assertIs(len(all_changes),7)
         self_fields = self.record.__dict__
         diff_fields = diff_record_1.__dict__
         for change in all_changes:
             self.assertIs(change['old'],self_fields[change['field']])
             self.assertIs(change['new'],diff_fields[change['field']])
             self.assertIs(diff_fields[change['field']] == self_fields[change['field']], False)
+
+    def test_override_from_dict(self):
+        """
+        Tests the ITSystemRecord method override_from_dict().
+        Ensures that the function can successfully overrite a record if the imported dict is a direct copy of a record or converted to plain text for fk & choice variables.
+        """
+        record = create_random_record()
+        record.status = 1
+        new_record = ITSystemRecord()
+        record_dict = get_record_dict(record)
+        new_record.override_from_dict(record_dict, plain_text=False)
+    
+        # Test standard full replacement
+        changes = record.compare(new_record)
+        self.assertIs(len(changes),0)
+
+        # Testing standard override 1 field
+        record_dict['name'] = record.name + random_string()
+        new_record.override_from_dict(record_dict, plain_text=False)
+        changes = record.compare(new_record)
+        self.assertIs(len(changes),1)
+
+        # test plain text full replacement
+        new_record = ITSystemRecord()
+        record_dict = get_record_dict(record)
+        record_dict['system_owner'] = record.system_owner.email
+        record_dict['business_service_owner'] = record.business_service_owner.email
+        record_dict['technology_custodian'] = record.technology_custodian.email
+        record_dict['information_custodian'] = record.information_custodian.email
+        record_dict['division'] = record.division.name
+        record_dict['vital_records'] = str(record.vital_records)
+        record_dict['status'] = record.get_status_display()
+        new_record.override_from_dict(record_dict, plain_text=True)
+        changes = record.compare(new_record)
+        print(changes)
+        self.assertIs(len(changes),0)
     
 # Creates a DepartmentUser object for testing
 def create_test_user():
@@ -65,12 +101,20 @@ def create_test_user():
             azure_guid=uuid1,
     )
 
+# Creates a random Division object for testing
+def create_test_division():
+    return mixer.blend(
+        Division,
+        name = mixer.RANDOM
+    )
+
 # Creates a random ITSystemRecord object for testing
 def create_random_record():
     return mixer.blend(
             ITSystemRecord,
             system_id = mixer.RANDOM,
             name = mixer.RANDOM,
+            division = create_test_division(),
             description = mixer.RANDOM,
             business_service_owner = create_test_user(),
             system_owner = create_test_user(),
@@ -84,9 +128,21 @@ def duplicate_record(record):
             ITSystemRecord,
             system_id = record.system_id + random_string(),
             name = record.name,
+            division = record.division,
             description = record.description,
             business_service_owner = record.business_service_owner,
             system_owner = record.system_owner,
             technology_custodian = record.technology_custodian,
             information_custodian = record.information_custodian
         )
+
+# Gets the dictionary of an ITSystemRecord object
+def get_record_dict(record):
+    dict = record.__dict__.copy()
+    excluded_fields = ['created_date','modified_date', 'created_by', 'modified_by', 'id', '_state']
+    for field in excluded_fields:
+        if field in dict:
+            del dict[field]
+    return dict
+    
+
