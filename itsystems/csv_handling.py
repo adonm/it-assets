@@ -1,6 +1,8 @@
 import csv
 import io
+import reversion
 from .models import ITSystemRecord, DepartmentUser, Division
+
 
 def ExportCSV(response):
     """
@@ -64,14 +66,33 @@ def ImportCSV(request):
                 if found_record:
                     changes = found_record.compare(new_record)
                     if len(changes)>0:
-                        found_record.override_from_dict(record)
-                        found_record.modified_by = request.user.email
-                        found_record.save()
+                        with reversion.create_revision():
+                            # Update Record
+                            found_record.override_from_dict(record)
+                            found_record.modified_by = request.user.email
+                            found_record.save()
+
+                            # Create comment for version history
+                            change_log = "Changed via CSV: "
+                            for change in changes:
+                                change_log += change['verbose_field'] + ', '
+                            comment = change_log[:-2] + "."
+
+                            # Create version history entry
+                            reversion.set_user(request.user)
+                            reversion.set_comment(comment)
+
                         update_list.append({"record":found_record.system_id_name, "changes":changes})
                 elif not found_record:
-                    new_record.created_by = request.user.email
-                    new_record.modified_by = request.user.email
-                    new_record.save()
+                    with reversion.create_revision():
+                        # Create Record
+                        new_record.created_by = request.user.email
+                        new_record.modified_by = request.user.email
+                        new_record.save()
+
+                        # Create version history entry
+                        reversion.set_user(request.user)
+                        reversion.set_comment("Created via CSV import.")
                     changes = new_record.compare(None)
                     create_list.append({"record":new_record.system_id_name, "changes":changes})
             except Exception as e:
@@ -116,3 +137,9 @@ def __validate_csv(csv_file):
 
 def __get_model_fields():
     return ITSystemRecord._meta.get_fields()[1:-4]
+
+def __get_change_log_text(changes):
+    change_log = "Changed via CSV import: "
+    for change in changes:
+        change_log += change['field'] + ','
+    return change_log[:-1] + "."

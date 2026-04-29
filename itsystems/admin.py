@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path
 
+from reversion.admin import VersionAdmin
+
 from .models import ITSystemRecord, Division, Seasonality, Status, Sensitivity, SystemType, Availability
 from .views import ExportRegisterAsCSV, ImportRegisterChangesFromCSV
 
@@ -29,7 +31,7 @@ class SystemTypeAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 @admin.register(ITSystemRecord)
-class ITSystemRecordAdmin(admin.ModelAdmin):
+class ITSystemRecordAdmin(VersionAdmin):
     change_list_template = "admin/itsystems/itsystemrecord/change_list.html"
 
     ordering = ['system_id']

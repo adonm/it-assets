@@ -3,6 +3,8 @@ import csv
 
 from django.test import TestCase
 from django.http import HttpResponse
+from django.contrib.auth.models import User
+
 
 from .test_model import create_random_record
 from itsystems.models import ITSystemRecord
@@ -28,13 +30,10 @@ class CSVHandlingTests(TestCase):
             return self.raw_text
         
     class FauxPOST:
-        class FauxUser:
-            def __init__(self, email):
-                self.email = email
-
-        def __init__(self,csv_file):
+        def __init__(self,csv_file, user):
             self.FILES = {'csv_file': csv_file}
-            self.user = CSVHandlingTests.FauxPOST.FauxUser('test@test.com')
+            self.user =  user
+
     def setUp(self):
         create_random_record().save()
         create_random_record().save()
@@ -90,9 +89,10 @@ class CSVHandlingTests(TestCase):
         """
         Tests that all record import states in import_csv() are successfully and accurately reported
         """
+        faux_user = User.objects.create_user(username="testuser", email="user@dbca.wa.gov.au.com", password="pass")
 
         # Validates that identical values do not trigger an update, deletion, or failure        
-        results = ImportCSV(get_faux_post())
+        results = ImportCSV(get_faux_post(faux_user))
         original_size = len(ITSystemRecord.objects.all())
         self.assertEqual(len(results['created']), 0)
         self.assertEqual(len(results['updated']), 0)
@@ -101,7 +101,7 @@ class CSVHandlingTests(TestCase):
 
 
         # Validates update & creation results
-        original_db = get_faux_post()
+        original_db = get_faux_post(faux_user)
         ITSystemRecord.objects.first().delete()
         record = ITSystemRecord.objects.first()
         new_description = str(record.description)
@@ -121,7 +121,7 @@ class CSVHandlingTests(TestCase):
         self.assertEqual(original_size, len(ITSystemRecord.objects.all())-1)
 
         # Validates failure results by deleting required meta data 'user'
-        original_db = get_faux_post()
+        original_db = get_faux_post(faux_user)
         ITSystemRecord.objects.first().delete()
         record = ITSystemRecord.objects.first()
         record.description = record.description + "new val"
@@ -141,8 +141,8 @@ def get_field_names(field_list):
         field_names.append(field.name)
     return field_names
 
-def get_faux_post():
+def get_faux_post(user):
     faux_response = HttpResponse()
     ExportCSV(faux_response) 
     faux_file = CSVHandlingTests.FauxCSVFile(name='test.csv', is_multiple_chunks=False, raw_text=faux_response.content.decode(encoding='utf-8', errors='replace'))
-    return CSVHandlingTests.FauxPOST(faux_file)
+    return CSVHandlingTests.FauxPOST(faux_file, user)

@@ -182,9 +182,9 @@ class ITSystemRecord(models.Model):
         help_text="Availability",
     )
     link = models.URLField(max_length=2048, null=True, blank=True, help_text="URL to web application")
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True, verbose_name="Description")
     file_store_link = models.URLField(max_length=2048, null=True, blank=True, verbose_name="File Store Link", help_text="URL to file store")
-    vital_records = models.BooleanField(default=False)
+    vital_records = models.BooleanField(default=False, verbose_name="Vital Records")
     disposal_authority = models.CharField(max_length=255, null=True, blank=True, verbose_name="Disposal Authority")
     retention_and_disposal = models.CharField(max_length=255, null=True, blank=True, verbose_name="Retention and Disposal")
     ubcs = models.CharField(max_length=255, null=True, blank=True, verbose_name="UBCS")
@@ -230,7 +230,7 @@ class ITSystemRecord(models.Model):
                     try:
                         #  obj_fileds' 'Or None' accounts for empty string values, self fields' 'Or None' allows for Boolean 'False' equivalency
                         if (self_fields[self_val] or None) != (obj_fields[self_val] or None):
-                            changes.append({"field": self.__display_field__(str(self_val)), "old":self.__display_val__(self_val,self_fields[self_val]), "new": obj.__display_val__(self_val, obj_fields[self_val])})
+                            changes.append({"field": self.__display_field__(str(self_val)),"verbose_field": self.__display_field_verbose__(str(self_val)),  "old":self.__display_val__(self_val,self_fields[self_val]), "new": obj.__display_val__(self_val, obj_fields[self_val])})
                     except KeyError as e:
                         print("couldn't find " + self_val)
                         print(e)
@@ -238,7 +238,7 @@ class ITSystemRecord(models.Model):
             self_fields = self.__dict__
             for self_val in self_fields.items():
                 if self_val[0] not in excluded_fields:
-                    changes.append({"field": self.__display_field__(self_val[0]), "old":None, "new": self.__display_val__(self_val[0],self_val[1]) })
+                    changes.append({"field": self.__display_field__(self_val[0]), "verbose_field": self.__display_field_verbose__(self_val[0]), "old":None, "new": self.__display_val__(self_val[0],self_val[1]) })
 
         return changes
     
@@ -328,6 +328,9 @@ class ITSystemRecord(models.Model):
         if field.endswith("_id"):
             field_name = field[:-3]
         return field_name
+
+    def __display_field_verbose__(self,field):
+        return self._meta.get_field(self.__display_field__(field)).verbose_name
 
     def __get_choice_fk(self, text, ChoiceClass):
         """

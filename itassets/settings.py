@@ -74,6 +74,7 @@ INSTALLED_APPS = (
     "organisation",
     "registers",
     "itsystems",
+    "reversion",
 )
 
 MIDDLEWARE = [

@@ -37,7 +37,7 @@
                 <tbody>
                 {% for change in update.changes%}
                 <tr>
-                    <td>{{change.field}}</td>
+                    <td>{{change.verbose_field}}</td>
                     <td>{{change.new}}</td>
                     <td>{{change.old}}</td>
                 </tr>
@@ -64,7 +64,7 @@
                 <tbody>
                 {% for change in create.changes%}
                 <tr>
-                    <td>{{change.field}}</td>
+                    <td>{{change.verbose_field}}</td>
                     <td>{{change.new}}</td>
                     <td>{{change.old}}</td>
                 </tr>
