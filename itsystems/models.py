@@ -225,13 +225,12 @@ class ITSystemRecord(models.Model):
         if obj:
             self_fields = self.__dict__
             obj_fields = obj.__dict__
-
             for self_val, obj_val in self_fields.items():
                 if self_val not in excluded_fields:
                     try:
                         #  obj_fileds' 'Or None' accounts for empty string values, self fields' 'Or None' allows for Boolean 'False' equivalency
                         if (self_fields[self_val] or None) != (obj_fields[self_val] or None):
-                            changes.append({"field": str(self_val), "old":self_fields[self_val], "new": obj_fields[self_val] })
+                            changes.append({"field": self.__display_field__(str(self_val)), "old":self.__display_val__(self_val,self_fields[self_val]), "new": obj.__display_val__(self_val, obj_fields[self_val])})
                     except KeyError as e:
                         print("couldn't find " + self_val)
                         print(e)
@@ -239,15 +238,9 @@ class ITSystemRecord(models.Model):
             self_fields = self.__dict__
             for self_val in self_fields.items():
                 if self_val[0] not in excluded_fields:
-                    changes.append({"field": self_val[0], "old":None, "new": self_val[1] })
+                    changes.append({"field": self.__display_field__(self_val[0]), "old":None, "new": self.__display_val__(self_val[0],self_val[1]) })
 
         return changes
-
-    def __str__(self):
-        """
-        Overrides the default __str__ method
-        """
-        return self.system_id_name
     
     def save(self, *args, **kwargs):
         """
@@ -313,6 +306,28 @@ class ITSystemRecord(models.Model):
             self.sensitivity = Sensitivity.objects.get(pk=dict.get('sensitivity_id'))
             self.system_type = SystemType.objects.get(pk=dict.get('system_type_id'))
             self.vital_records = dict.get('vital_records')
+
+    def __str__(self):
+        """
+        Overrides the default __str__ method
+        """
+        return self.system_id_name
+
+    def __display_val__(self, field, value):
+        """
+        Returns the natural display value for a field value
+        """
+        return_val = value
+        if field.endswith("_id"):
+            return_val = str(getattr(self,field[:-3]))
+
+        return return_val
+    
+    def __display_field__(self,field):
+        field_name = field
+        if field.endswith("_id"):
+            field_name = field[:-3]
+        return field_name
 
     def __get_choice_fk(self, text, ChoiceClass):
         """

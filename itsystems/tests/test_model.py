@@ -44,12 +44,12 @@ class ITSystemRecordTestCase(TestCase):
 
         # asserts multiple changes are accurately reported in the change log
         self.assertIs(len(all_changes),7)
-        self_fields = self.record.__dict__
-        diff_fields = diff_record_1.__dict__
         for change in all_changes:
-            self.assertIs(change['old'],self_fields[change['field']])
-            self.assertIs(change['new'],diff_fields[change['field']])
-            self.assertIs(diff_fields[change['field']] == self_fields[change['field']], False)
+            old_val = str(getattr(self.record,change['field']))
+            new_val = str(getattr(diff_record_1,change['field']))
+            self.assertIs(change['old'],old_val)
+            self.assertIs(change['new'],new_val)
+            self.assertIs(old_val == new_val, False)
 
     def test_override_from_dict(self):
         """
