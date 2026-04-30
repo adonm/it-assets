@@ -1,7 +1,7 @@
 import csv
 import io
 import reversion
-from .models import ITSystemRecord, DepartmentUser, Division
+from .models import ITSystemRecord
 
 
 def ExportCSV(response):
@@ -61,14 +61,14 @@ def ImportCSV(request):
             try:
                 # Populate new record with data
                 new_record = ITSystemRecord()
-                new_record.override_from_dict(record)
+                new_record.set_from_dict(record)
 
                 if found_record:
                     changes = found_record.compare(new_record)
                     if len(changes)>0:
                         with reversion.create_revision():
                             # Update Record
-                            found_record.override_from_dict(record)
+                            found_record.set_from_dict(record)
                             found_record.modified_by = request.user.email
                             found_record.save()
 
@@ -136,10 +136,7 @@ def __validate_csv(csv_file):
     return {"valid":valid, "message":msg, "raw_text":raw_text}
 
 def __get_model_fields():
+    """
+    Retrieves data-entry relevant fields of the ITSystemRecord class
+    """
     return ITSystemRecord._meta.get_fields()[1:-4]
-
-def __get_change_log_text(changes):
-    change_log = "Changed via CSV import: "
-    for change in changes:
-        change_log += change['field'] + ','
-    return change_log[:-1] + "."

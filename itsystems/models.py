@@ -215,6 +215,13 @@ class ITSystemRecord(models.Model):
     modified_date = models.DateTimeField(auto_now=True, verbose_name= "Modified")
     modified_by = models.EmailField(editable=False, verbose_name="Modified By")
 
+    @property
+    def system_id_name(self):
+        """
+        A calculated field combining the ID of the record and the name.
+        """
+        return self.system_id + " - " + self.name
+
     def compare(self, obj):
         """
         Compares a record instance with itself, returning a list of differences between the two.
@@ -230,7 +237,7 @@ class ITSystemRecord(models.Model):
                     try:
                         #  obj_fileds' 'Or None' accounts for empty string values, self fields' 'Or None' allows for Boolean 'False' equivalency
                         if (self_fields[self_val] or None) != (obj_fields[self_val] or None):
-                            changes.append({"field": self.__display_field__(str(self_val)),"verbose_field": self.__display_field_verbose__(str(self_val)),  "old":self.__display_val__(self_val,self_fields[self_val]), "new": obj.__display_val__(self_val, obj_fields[self_val])})
+                            changes.append({"field": self.__strip_field__(str(self_val)),"verbose_field": self.__display_field__(str(self_val)),  "old":self.__display_val__(self_val,self_fields[self_val]), "new": obj.__display_val__(self_val, obj_fields[self_val])})
                     except KeyError as e:
                         print("couldn't find " + self_val)
                         print(e)
@@ -238,7 +245,7 @@ class ITSystemRecord(models.Model):
             self_fields = self.__dict__
             for self_val in self_fields.items():
                 if self_val[0] not in excluded_fields:
-                    changes.append({"field": self.__display_field__(self_val[0]), "verbose_field": self.__display_field_verbose__(self_val[0]), "old":None, "new": self.__display_val__(self_val[0],self_val[1]) })
+                    changes.append({"field": self.__strip_field__(self_val[0]), "verbose_field": self.__display_field__(self_val[0]), "old":None, "new": self.__display_val__(self_val[0],self_val[1]) })
 
         return changes
     
@@ -262,16 +269,9 @@ class ITSystemRecord(models.Model):
 
         super(ITSystemRecord, self).save(*args, **kwargs)
     
-    @property
-    def system_id_name(self):
+    def set_from_dict(self, dict, plain_text = True):
         """
-        A calculated field combining the ID of the record and the name.
-        """
-        return self.system_id + " - " + self.name
-    
-    def override_from_dict(self, dict, plain_text = True):
-        """
-        Overrides the inputted record with it's own field values.
+        Sets field values from inputted dictionary object.
         If plain_text is false, data with fk values is interpreted literally instead of as plain text
         """
         self.system_id = dict.get('system_id')
@@ -309,13 +309,13 @@ class ITSystemRecord(models.Model):
 
     def __str__(self):
         """
-        Overrides the default __str__ method
+        Overrides the default __str__ method.
         """
         return self.system_id_name
 
     def __display_val__(self, field, value):
         """
-        Returns the natural display value for a field value
+        Returns the natural display value for a field value.
         """
         return_val = value
         if field.endswith("_id"):
@@ -323,24 +323,30 @@ class ITSystemRecord(models.Model):
 
         return return_val
     
-    def __display_field__(self,field):
+    def __strip_field__(self,field):
+        """
+        Strips any _id suffix from a field name.
+        """
         field_name = field
         if field.endswith("_id"):
             field_name = field[:-3]
         return field_name
 
-    def __display_field_verbose__(self,field):
-        return self._meta.get_field(self.__display_field__(field)).verbose_name
+    def __display_field__(self,field):
+        """
+        Returns the natural display string for a field value.
+        """
+        return self._meta.get_field(self.__strip_field__(field)).verbose_name
 
     def __get_choice_fk(self, text, ChoiceClass):
         """
-        Retrieves a division id from the inputted text value
+        Retrieves a division id from the inputted text value.
         """
         fk = None
         try:
             if text:
                 fk = ChoiceClass.objects.get(name=text)
-        except Exception as e:
+        except Exception:
             raise Exception(str(ChoiceClass._meta.verbose_name) + ": Can't find option '" + text + "'.")
         return fk
 
@@ -360,7 +366,7 @@ class ITSystemRecord(models.Model):
                     email_query = names[0].lower() + "." + "".join(names[1:]).lower() + suffix
             if email_query:
                 user = DepartmentUser.objects.get(email=email_query)
-        except Exception as e:
+        except Exception:
             if email:
                 raise Exception(field + ": Can't find user '" + email + "'.")
             user = None

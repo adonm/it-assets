@@ -80,7 +80,7 @@ class CSVHandlingTests(TestCase):
             self.assertIsNotNone(found_record)
             if found_record:
                 new_record = ITSystemRecord()
-                new_record.override_from_dict(record)
+                new_record.set_from_dict(record)
                 changes = found_record.compare(new_record)
                 print(changes)
                 self.assertIs(len(changes),0)        

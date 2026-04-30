@@ -51,7 +51,7 @@ class ITSystemRecordTestCase(TestCase):
             self.assertIs(change['new'],new_val)
             self.assertIs(old_val == new_val, False)
 
-    def test_override_from_dict(self):
+    def test_set_from_dict(self):
         """
         Tests the ITSystemRecord method override_from_dict().
         Ensures that the function can successfully overrite a record if the imported dict is a direct copy of a record or converted to plain text for fk & bool variables.
@@ -59,7 +59,7 @@ class ITSystemRecordTestCase(TestCase):
         record = create_random_record()
         new_record = ITSystemRecord()
         record_dict = get_record_dict(record)
-        new_record.override_from_dict(record_dict, plain_text=False)
+        new_record.set_from_dict(record_dict, plain_text=False)
     
         # Test standard full replacement
         changes = record.compare(new_record)
@@ -67,7 +67,7 @@ class ITSystemRecordTestCase(TestCase):
 
         # Testing standard override 1 field
         record_dict['name'] = record.name + random_string()
-        new_record.override_from_dict(record_dict, plain_text=False)
+        new_record.set_from_dict(record_dict, plain_text=False)
         changes = record.compare(new_record)
         self.assertIs(len(changes),1)
 
@@ -85,7 +85,7 @@ class ITSystemRecordTestCase(TestCase):
         record_dict['sensitivity'] = record.sensitivity.name
         record_dict['system_type'] = record.system_type.name
         record_dict['vital_records'] = str(record.vital_records)
-        new_record.override_from_dict(record_dict, plain_text=True)
+        new_record.set_from_dict(record_dict, plain_text=True)
         changes = record.compare(new_record)
         self.assertIs(len(changes),0)
     
