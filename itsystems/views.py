@@ -1,0 +1,62 @@
+from datetime import date, datetime
+
+from django.shortcuts import render
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.views.generic import ListView, View
+from django.http import HttpResponse
+
+from .models import ITSystemRecord
+from .utils import ExportCSV, ImportCSV
+
+class ITSystemsRegister(LoginRequiredMixin, ListView):
+    """A custom user facing view to display the IT Systems Register"""
+
+    template_name = "itsystems/it_systems_register.html"
+    model = ITSystemRecord
+    paginate_by = 50
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["site_title"] = "Office of Information Management"
+        context["site_acronym"] = "OIM"
+        context["page_title"] = "IT Systems Register"
+        return super().get_context_data(**kwargs)
+    
+class ExportRegisterAsCSV(LoginRequiredMixin, View):
+    """A custom view to return a representation of the IT Systems Register as a csv"""
+    def get(self, request, *args, **kwargs):
+        # Creates a http response to hold the CSV
+        attachment_header = 'attachment; filename="it_systems_register_' + str(date.today().isoformat()) + '_' + str(datetime.now().strftime('%H%M')) + '.csv"'
+        response = HttpResponse(
+            content_type="text/csv",
+            headers={"Content-Disposition":attachment_header}
+        )
+        # Writes register to the response as a CSV
+        ExportCSV(response)
+        return response
+
+class ImportRegisterChangesFromCSV(LoginRequiredMixin, PermissionRequiredMixin, View):
+    """A custom view to allow the user to import changes to the IT Systems Register via a csv"""
+
+    # Permissions locked to people that can already edit the register
+    permission_required = ["itsystems.change_itsystemrecord", "itsystems.add_itsystemrecord"]
+
+    # Displays the initial file upload form
+    def get(self, request, *args, **kwargs):
+        response = render(request, "admin/itsystems/itsystemrecord/upload_csv.html")
+        return response
+
+    # Processes CSV and displays results to the user
+    # If the import is successful it displays the results, otherwise it displays an error message in the file upload form
+    def post(self, request, *args, **kwargs):
+        # Imports CSV, returning results
+        results = ImportCSV(request)
+
+        if results['validation']['valid']:
+            # Displays results
+            response = render(request, "admin/itsystems/itsystemrecord/results.html", context = results)
+        else:
+            print(results['validation'])
+            # Displays error message
+            response = render(request, "admin/itsystems/itsystemrecord/upload_csv.html", context = results['validation'])
+        return response

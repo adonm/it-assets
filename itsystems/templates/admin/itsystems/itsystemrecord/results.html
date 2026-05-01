@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}
+{% endblock %}
+{% block content %}
+    <h1 style="color:LightGreen">Import Complete</h1>
+    See changes below
+    <br>
+    {% if failed %}
+        <h2 style="color:Tomato">Failures</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Record</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for failure in failed %}
+                <tr>
+                    <td>{{failure.record}}</td>
+                    <td>{{failure.changes}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+    {% endif %}
+
+    <h2>Updated Systems</h2>
+    {% if updated %}
+        {% for update in updated %}
+            <h3>{{update.record}}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>New</th>
+                        <th>Old</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for change in update.changes%}
+                <tr>
+                    <td>{{change.verbose_field}}</td>
+                    <td>{{change.new}}</td>
+                    <td>{{change.old}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            <br>
+        {% endfor %}
+    {% else %}
+        <p>No records were changed.</p>
+    {% endif %}
+
+    <br>
+    <h2>Created Systems</h2>
+    {% if created %}
+        {% for create in created %}
+            <h3>{{create.record}}</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>New</th>
+                        <th>Old</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for change in create.changes%}
+                <tr>
+                    <td>{{change.verbose_field}}</td>
+                    <td>{{change.new}}</td>
+                    <td>{{change.old}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        {% endfor %}
+    {% else %}
+        <p>No records were added.</p>
+    {% endif %}
+    <br>
+    <button onclick="window.close()">Close</button>
+{% endblock %}
