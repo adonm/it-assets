@@ -27,6 +27,13 @@ jobs:
           - 5432:5432
         options: --mount type=tmpfs,destination=/var/lib/postgresql/data --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - uses: trundev/setup-gdal@main
+        with:
+          gdal-version: 'v3.10.3'
+          rebuild-cache: 'false'
       #----------------------------------------------
       # Checkout repo
       #----------------------------------------------
@@ -38,12 +45,11 @@ jobs:
       #----------------------------------------------
       # Install GDAL into the environment
       #----------------------------------------------
-      - name: Install GDAL
-        id: install-gdal
-        run: |
-          sudo apt-add-repository --yes ppa:ubuntugis/ubuntugis-unstable
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends --yes gdal-bin libgdal-dev
+      # - name: Install GDAL
+      #   id: install-gdal
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install --no-install-recommends --yes gdal-bin libgdal-dev
       #----------------------------------------------
       # Install & configure uv
       #----------------------------------------------
