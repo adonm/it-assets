@@ -28,10 +28,11 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copy the remaining project files to finish building the project
 COPY gunicorn.py manage.py pyproject.toml ./
 COPY itassets ./itassets
+COPY itsystems ./itsystems
 COPY organisation ./organisation
 COPY registers ./registers
 # Compile scripts and collect static files
-RUN python -m compileall manage.py itassets organisation registers \
+RUN python -m compileall manage.py itassets organisation itsystems registers \
   && python manage.py collectstatic --noinput
 
 # Run the project as the nonroot user
